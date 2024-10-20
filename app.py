@@ -20,6 +20,11 @@ def play():
         'result': determine_winner(user_choice, computer_choice)
     })
 
+@app.route('/')
+def home():
+    return "Welcome to the Rock Paper Scissors API! Please use the /play endpoint to play."
+
+
 def determine_winner(user, computer):
     if user == computer:
         return "It's a tie!"
