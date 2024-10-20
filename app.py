@@ -1,22 +1,16 @@
 from flask import Flask, jsonify, request
 import random
 import os
-from flask_cors import CORS
+from flask_cors import CORS, cross_origin
 
 app = Flask(__name__)
 CORS(app)  # This will allow all origins by default
+CORS(app, support_credentials=True)
 
 choices = ['rock', 'paper', 'scissors']
 
-@app.before_request
-def before_request():
-    headers = {'Access-Control-Allow-Origin': '*',
-               'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-               'Access-Control-Allow-Headers': 'Content-Type'}
-    if request.method.lower() == 'options':
-        return jsonify(headers), 200
-
 @app.route('/play', methods=['POST'])
+@cross_origin(supports_credentials=True)
 def play():
     data = request.get_json()
     user_choice = data.get('choice')
