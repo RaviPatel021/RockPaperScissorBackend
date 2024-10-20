@@ -1,7 +1,7 @@
 from flask import Flask, jsonify, request
 import random
 import os
-from flask_cors import CORS
+from flask_cors import CORS, cross_origin
 
 app = Flask(__name__)
 CORS(app)  # This will allow all origins by default
