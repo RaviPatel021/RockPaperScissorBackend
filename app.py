@@ -8,6 +8,14 @@ CORS(app)  # This will allow all origins by default
 
 choices = ['rock', 'paper', 'scissors']
 
+@app.before_request
+def before_request():
+    headers = {'Access-Control-Allow-Origin': '*',
+               'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+               'Access-Control-Allow-Headers': 'Content-Type'}
+    if request.method.lower() == 'options':
+        return jsonify(headers), 200
+
 @app.route('/play', methods=['POST'])
 def play():
     data = request.get_json()
