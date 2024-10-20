@@ -1,8 +1,10 @@
 from flask import Flask, jsonify, request
 import random
 import os
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app)  # This will allow all origins by default
 
 choices = ['rock', 'paper', 'scissors']
 
