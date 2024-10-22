@@ -3,7 +3,7 @@ import random
 import os
 import numpy as np
 import tensorflow as tf
-from flask_cors import CORS
+from flask_cors import CORS, cross_origin
 
 import logging
 
@@ -21,8 +21,8 @@ if physical_devices:
     tf.config.experimental.set_visible_devices([], 'GPU')  # This will hide GPU devices
 
 app = Flask(__name__)
-CORS(app)  # This will allow all origins by default
-CORS(app, support_credentials=True)
+CORS(app, resources={r"/play": {"origins": "*"}})
+
 
 # Define a mapping for rock-paper-scissors values
 rps_mapping = {
@@ -41,6 +41,7 @@ past_data = [[random.randint(0, 2) for _ in range(2)] for _ in range(sequence_le
 
 
 @app.route('/play', methods=['POST'])
+@cross_origin(supports_credentials=True)
 def play():
     global past_data  # Declare past_data as global to modify it
     
