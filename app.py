@@ -5,8 +5,14 @@ import numpy as np
 import tensorflow as tf
 from flask_cors import CORS
 
-os.environ['CUDA_VISIBLE_DEVICES'] = '-1'  # Disable GPU
+# Disable GPU
+os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+os.environ['TF_FORCE_GPU_ALLOW_GROWTH'] = 'false'  # Prevent TensorFlow from allocating GPU memory
 
+# Ensure TensorFlow uses CPU
+physical_devices = tf.config.experimental.list_physical_devices('GPU')
+if physical_devices:
+    tf.config.experimental.set_visible_devices([], 'GPU')  # This will hide GPU devices
 
 app = Flask(__name__)
 CORS(app)  # This will allow all origins by default
@@ -27,7 +33,6 @@ choices = ['paper', 'scissors', 'rock']
 sequence_length = 5  # We will only keep the last 5 pairs of choices
 past_data = [[random.randint(0, 2) for _ in range(2)] for _ in range(sequence_length)]
 
-
 @app.route('/play', methods=['POST'])
 def play():
     global past_data  # Declare past_data as global to modify it
@@ -36,11 +41,9 @@ def play():
 
     input_data = np.array(past_data).reshape(1, sequence_length, 2)
 
-
     # Predict computer choice
     predicted_move_index = np.argmax(model.predict(input_data))
     computer_choice = choices[predicted_move_index]
-
 
     past_data.append([rps_mapping[user_choice], rps_mapping[computer_choice]])
     past_data = past_data[1:]

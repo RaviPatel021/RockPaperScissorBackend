@@ -4,4 +4,3 @@ Werkzeug==2.0.3
 flask-cors
 numpy
 tensorflow
-scikit-learn
