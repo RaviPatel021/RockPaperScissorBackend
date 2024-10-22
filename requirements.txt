@@ -3,4 +3,4 @@ gunicorn==20.1.0
 Werkzeug==2.0.3
 flask-cors
 numpy
-tensorflow
+tensorflow==2.12.0
