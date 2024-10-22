@@ -3,9 +3,16 @@ import random
 import os
 import numpy as np
 import tensorflow as tf
-from flask_cors import CORS, cross_origin
-import random
+from flask_cors import CORS
 
+# Enable GPU if available
+physical_devices = tf.config.list_physical_devices('GPU')
+if physical_devices:
+    try:
+        tf.config.experimental.set_memory_growth(physical_devices[0], True)
+        print("GPU memory growth set.")
+    except RuntimeError as e:
+        print(e)  # Memory growth must be set at program startup
 
 app = Flask(__name__)
 CORS(app)  # This will allow all origins by default
@@ -23,25 +30,26 @@ model = tf.keras.models.load_model('rock_paper_scissors_model.h5')
 
 choices = ['paper', 'scissors', 'rock']
 
-
 sequence_length = 5  # We will only keep the last 5 pairs of choices
 past_data = [[random.randint(0, 2) for _ in range(2)] for _ in range(sequence_length)]
 
-print(past_data)
 
 @app.route('/play', methods=['POST'])
-@cross_origin(supports_credentials=True)
 def play():
+    global past_data  # Declare past_data as global to modify it
     data = request.get_json()
     user_choice = data.get('choice')
 
+    input_data = np.array(past_data).reshape(1, sequence_length, 2)
 
-    predicted_move_index = np.argmax(model.predict(past_data))
+
+    # Predict computer choice
+    predicted_move_index = np.argmax(model.predict(input_data))
     computer_choice = choices[predicted_move_index]
+
 
     past_data.append([rps_mapping[user_choice], rps_mapping[computer_choice]])
     past_data = past_data[1:]
-
 
     return jsonify({
         'user_choice': user_choice,
@@ -52,7 +60,6 @@ def play():
 @app.route('/')
 def home():
     return "Welcome to the Rock Paper Scissors API! Please use the /play endpoint to play."
-
 
 def determine_winner(user, computer):
     if user == computer:
