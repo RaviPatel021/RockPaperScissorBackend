@@ -5,14 +5,8 @@ import numpy as np
 import tensorflow as tf
 from flask_cors import CORS
 
-# Enable GPU if available
-physical_devices = tf.config.list_physical_devices('GPU')
-if physical_devices:
-    try:
-        tf.config.experimental.set_memory_growth(physical_devices[0], True)
-        print("GPU memory growth set.")
-    except RuntimeError as e:
-        print(e)  # Memory growth must be set at program startup
+os.environ['CUDA_VISIBLE_DEVICES'] = '-1'  # Disable GPU
+
 
 app = Flask(__name__)
 CORS(app)  # This will allow all origins by default
