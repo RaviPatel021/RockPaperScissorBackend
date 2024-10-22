@@ -26,7 +26,7 @@ rps_mapping = {
 }
 
 # Load the trained LSTM model
-model = tf.keras.models.load_model('rock_paper_scissors_model.h5')
+model = tf.keras.models.load_model('rock_paper_scissors_model.keras')
 
 choices = ['paper', 'scissors', 'rock']
 
