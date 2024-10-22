@@ -2,3 +2,5 @@ Flask==2.1.1
 gunicorn==20.1.0
 Werkzeug==2.0.3
 flask-cors
+numpy
+tensorflow==2.12.0

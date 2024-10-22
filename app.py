@@ -1,13 +1,33 @@
 from flask import Flask, jsonify, request
 import random
 import os
+import numpy as np
+import tensorflow as tf
 from flask_cors import CORS, cross_origin
+import random
+
 
 app = Flask(__name__)
 CORS(app)  # This will allow all origins by default
 CORS(app, support_credentials=True)
 
-choices = ['rock', 'paper', 'scissors']
+# Define a mapping for rock-paper-scissors values
+rps_mapping = {
+    'rock': 0,
+    'paper': 1,
+    'scissors': 2
+}
+
+# Load the trained LSTM model
+model = tf.keras.models.load_model('rock_paper_scissors_model.h5')
+
+choices = ['paper', 'scissors', 'rock']
+
+
+sequence_length = 5  # We will only keep the last 5 pairs of choices
+past_data = [[random.randint(0, 2) for _ in range(2)] for _ in range(sequence_length)]
+
+print(past_data)
 
 @app.route('/play', methods=['POST'])
 @cross_origin(supports_credentials=True)
@@ -15,8 +35,13 @@ def play():
     data = request.get_json()
     user_choice = data.get('choice')
 
-    # For now, computer's choice is random
-    computer_choice = random.choice(choices)
+
+    predicted_move_index = np.argmax(model.predict(past_data))
+    computer_choice = choices[predicted_move_index]
+
+    past_data.append([rps_mapping[user_choice], rps_mapping[computer_choice]])
+    past_data = past_data[1:]
+
 
     return jsonify({
         'user_choice': user_choice,
