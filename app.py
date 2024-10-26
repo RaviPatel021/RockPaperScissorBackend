@@ -61,6 +61,7 @@ past_data = [[random.randint(0, 2) for _ in range(2)] for _ in range(sequence_le
 @app.route('/play', methods=['POST'])
 @cross_origin(supports_credentials=True)
 def play():
+    global past_data
     data = request.get_json()
     user_choice = data.get('choice')
 
