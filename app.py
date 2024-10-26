@@ -61,21 +61,11 @@ past_data = [[random.randint(0, 2) for _ in range(2)] for _ in range(sequence_le
 @app.route('/play', methods=['POST'])
 @cross_origin(supports_credentials=True)
 def play():
-    global past_data  # Declare past_data as global to modify it
-    
-    # Log the start of the request
-    logging.info("Received request to play.")
-    
     data = request.get_json()
     user_choice = data.get('choice')
-    
-    # Log the user's choice
-    logging.info(f"User choice: {user_choice}")
 
-    # Validate user choice
-    if user_choice not in rps_mapping:
-        logging.error(f"Invalid user choice: {user_choice}")
-        return jsonify({'error': 'Invalid choice! Please choose rock, paper, or scissors.'}), 400
+    # For now, computer's choice is random
+    computer_choice = random.choice(choices)
 
     # Prepare input data for the model
     input_data = np.array(past_data).reshape(1, sequence_length, 2)
@@ -110,12 +100,13 @@ def play():
     return jsonify({
         'user_choice': user_choice,
         'computer_choice': computer_choice,
-        'result': result
+        'result': determine_winner(user_choice, computer_choice)
     })
 
 @app.route('/')
 def home():
     return "Welcome to the Rock Paper Scissors API! Please use the /play endpoint to play."
+
 
 def determine_winner(user, computer):
     if user == computer:
@@ -129,3 +120,4 @@ def determine_winner(user, computer):
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))  # Default to 5000 if not specified by Render
     app.run(host='0.0.0.0', port=port)
+
