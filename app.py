@@ -17,6 +17,13 @@ os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 # MongoDB connection setup
 mongodb_connection_string = os.environ.get('MONGODB_CONNECTION_STRING')
 client = MongoClient(mongodb_connection_string)
+
+try:
+    client.admin.command('ping')
+    print("Pinged your deployment. You successfully connected to MongoDB!")
+except Exception as e:
+    print(e)
+
 db = client['rockpaperscissor']  # Replace with your database name
 results_collection = db['results']  # Collection to store game results
 
