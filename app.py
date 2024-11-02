@@ -5,12 +5,22 @@ import numpy as np
 from flask_cors import CORS, cross_origin
 import logging
 import onnxruntime as ort
+from pymongo import MongoClient
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 
 # Disable GPU (if you want to use only CPU)
 os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+
+# MongoDB connection setup
+mongodb_connection_string = os.getenv('MONGODB_CONNECTION_STRING')
+client = MongoClient(mongodb_connection_string)
+db = client['rockpaperscissor']  # Replace with your database name
+results_collection = db['results']  # Collection to store game results
 
 app = Flask(__name__)
 CORS(app, resources={r"/play": {"origins": "*"}})
@@ -24,7 +34,7 @@ rps_mapping = {
 
 # Load the ONNX model
 onnx_model_path = 'rock_paper_scissors_model.onnx'
-session = ort.InferenceSession(onnx_model_path)
+onnx_session = ort.InferenceSession(onnx_model_path)  # Renamed this variable
 
 choices = ['paper', 'scissors', 'rock']
 sequence_length = 20  # Keep the last 20 pairs of choices
@@ -37,46 +47,99 @@ def play():
     data = request.get_json()
     user_choice = data.get('choice')
 
+    user_id = data.get('user_id')
+    isRandom = data.get('random')
+    logging.info(f"User ID: {user_id}")
+
     # For now, computer's choice is random
     computer_choice = random.choice(choices)
 
-    # Prepare input data for the model
-    input_data = np.array(past_data, dtype=np.float32).reshape(1, sequence_length, 2)
+    if isRandom:
+        computer_choice = data.get('computer')
 
-    # Log input data shape
-    logging.info(f"Input data shape: {input_data.shape}")
+        # Determine the winner
+        result = determine_winner(user_choice, computer_choice)
 
-    # Predict computer choice using ONNX model
-    try:
-        logging.info("Predicting computer choice...")
-        outputs = session.run(None, {'input': input_data})
-        predicted_move_index = np.argmax(outputs[0])
-        computer_choice = choices[predicted_move_index]
-        logging.info(f"Predicted computer choice: {computer_choice}")
-    except Exception as e:
-        logging.error(f"Error during prediction: {e}")
-        return jsonify({'error': 'Prediction failed!'}), 500
+        # Store the result in MongoDB with the username
+        store_result(user_id, user_choice, computer_choice, result, isRandom)
 
-    # Update past data
-    past_data.append([rps_mapping[user_choice], rps_mapping[computer_choice]])
-    past_data = past_data[1:]
+        # Return the response
+        return jsonify({
+            'user_choice': user_choice,
+            'computer_choice': computer_choice,
+            'result': determine_winner(user_choice, computer_choice)
+        })
 
-    # Determine the winner
-    result = determine_winner(user_choice, computer_choice)
-    
-    # Log the result
-    logging.info(f"Result: {result}")
+    else:
+        # Prepare input data for the model
+        input_data = np.array(past_data, dtype=np.float32).reshape(1, sequence_length, 2)
 
-    # Return the response
-    return jsonify({
-        'user_choice': user_choice,
-        'computer_choice': computer_choice,
-        'result': determine_winner(user_choice, computer_choice)
-    })
+        # Log input data shape
+        logging.info(f"Input data shape: {input_data.shape}")
+
+        # Predict computer choice using ONNX model
+        try:
+            logging.info("Predicting computer choice...")
+            outputs = onnx_session.run(None, {'input': input_data})
+            predicted_move_index = np.argmax(outputs[0])
+            computer_choice = choices[predicted_move_index]
+            logging.info(f"Predicted computer choice: {computer_choice}")
+        except Exception as e:
+            logging.error(f"Error during prediction: {e}")
+            return jsonify({'error': 'Prediction failed!'}), 500
+
+        # Update past data
+        past_data.append([rps_mapping[user_choice], rps_mapping[computer_choice]])
+        past_data = past_data[1:]
+
+        # Determine the winner
+        result = determine_winner(user_choice, computer_choice)
+        
+        # Log the result
+        logging.info(f"Result: {result}")
+
+        # Store the result in MongoDB with the username
+        store_result(user_id, user_choice, computer_choice, result, isRandom)
+
+        # Return the response
+        return jsonify({
+            'user_choice': user_choice,
+            'computer_choice': computer_choice,
+            'result': determine_winner(user_choice, computer_choice)
+        })
+        
+
+
 
 @app.route('/')
 def home():
     return "Welcome to the Rock Paper Scissors API! Please use the /play endpoint to play."
+
+
+def store_result(username, user_choice, computer_choice, result, isRandom):
+    """Store game result in MongoDB."""
+    game_result = {
+        'user_choice': user_choice,
+        'computer_choice': computer_choice,
+        'result': result,
+        'random': isRandom,
+    }
+
+    # Check if the user already has a results document
+    existing_user = results_collection.find_one({'username': username})
+    
+    if existing_user:
+        # If user exists, append to the results array
+        results_collection.update_one(
+            {'username': username},
+            {'$push': {'results': game_result}}  # Append the game result to the results array
+        )
+    else:
+        # If user does not exist, create a new document with an array
+        results_collection.insert_one({
+            'username': username,
+            'results': [game_result]  # Create an array with the first game result
+        })
 
 
 def determine_winner(user, computer):
