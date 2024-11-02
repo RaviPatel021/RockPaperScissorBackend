@@ -2,7 +2,7 @@ from flask import Flask, jsonify, request
 import random
 import os
 import numpy as np
-from flask_cors import CORS, cross_origin
+from flask_cors import CORS
 import logging
 import onnxruntime as ort
 from pymongo import MongoClient
@@ -23,8 +23,7 @@ db = client['rockpaperscissor']  # Replace with your database name
 results_collection = db['results']  # Collection to store game results
 
 app = Flask(__name__)
-CORS(app, resources={r"/play": {"origins": "*"}})
-app.config['CORS_HEADERS'] = 'Content-Type'
+CORS(app, supports_credentials=True)
 
 # Define a mapping for rock-paper-scissors values
 rps_mapping = {
@@ -42,7 +41,6 @@ sequence_length = 20  # Keep the last 20 pairs of choices
 past_data = [[random.randint(0, 2) for _ in range(2)] for _ in range(sequence_length)]
 
 @app.route('/play', methods=['POST'])
-@cross_origin(supports_credentials=True)
 def play():
     global past_data
     data = request.get_json()
