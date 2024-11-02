@@ -20,6 +20,8 @@ client = MongoClient(mongodb_connection_string)
 db = client['rockpaperscissor']  # Replace with your database name
 results_collection = db['results']  # Collection to store game results
 
+logging.info(f"mongodb_connection_string: {mongodb_connection_string}")
+
 app = Flask(__name__)
 CORS(app, supports_credentials=True)
 
