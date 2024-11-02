@@ -6,9 +6,7 @@ from flask_cors import CORS
 import logging
 import onnxruntime as ort
 from pymongo import MongoClient
-from dotenv import load_dotenv
 
-load_dotenv()
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -17,7 +15,7 @@ logging.basicConfig(level=logging.INFO)
 os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
 # MongoDB connection setup
-mongodb_connection_string = os.getenv('MONGODB_CONNECTION_STRING')
+mongodb_connection_string = os.environ.get('MONGODB_CONNECTION_STRING')
 client = MongoClient(mongodb_connection_string)
 db = client['rockpaperscissor']  # Replace with your database name
 results_collection = db['results']  # Collection to store game results
