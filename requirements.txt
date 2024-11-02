@@ -5,6 +5,6 @@ flask-cors
 numpy
 onnxruntime
 dnspython
-pymongo
+pymongo[srv]==3.11
 flask_session
 python-dotenv
