@@ -4,6 +4,7 @@ Werkzeug==2.0.3
 flask-cors
 numpy
 onnxruntime
+dnspython
 pymongo[srv]
 flask_session
 python-dotenv
