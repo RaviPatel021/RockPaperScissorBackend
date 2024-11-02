@@ -49,6 +49,7 @@ def play():
     user_id = data.get('user_id')
     isRandom = data.get('random')
     logging.info(f"User ID: {user_id}")
+    logging.info(f"mongodb_connection_string: {mongodb_connection_string}")
 
     # For now, computer's choice is random
     computer_choice = random.choice(choices)
