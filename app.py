@@ -27,8 +27,6 @@ except Exception as e:
 db = client['rockpaperscissor']  # Replace with your database name
 results_collection = db['results']  # Collection to store game results
 
-logging.info(f"mongodb_connection_string: {mongodb_connection_string}")
-
 app = Flask(__name__)
 CORS(app, supports_credentials=True)
 
@@ -56,7 +54,6 @@ def play():
     user_id = data.get('user_id')
     isRandom = data.get('random')
     logging.info(f"User ID: {user_id}")
-    logging.info(f"mongodb_connection_string: {mongodb_connection_string}")
 
     # For now, computer's choice is random
     computer_choice = random.choice(choices)
@@ -160,5 +157,5 @@ def determine_winner(user, computer):
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))  # Default to 5000 if not specified by Render
-    app.run(host='0.0.0.0', port=port, debug=True)
+    app.run(host='0.0.0.0', port=port, debug=False)
 
