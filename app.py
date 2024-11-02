@@ -23,8 +23,7 @@ db = client['rockpaperscissor']  # Replace with your database name
 results_collection = db['results']  # Collection to store game results
 
 app = Flask(__name__)
-CORS(app, resources={r"/play": {"origins": ["http://localhost:3000", "https://rock-paper-scissor-frontend.vercel.app"]}}, supports_credentials=True)
-
+CORS(app, resources={r"/play": {"origins": "*"}})
 
 # Define a mapping for rock-paper-scissors values
 rps_mapping = {
