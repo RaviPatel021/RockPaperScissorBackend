@@ -42,6 +42,7 @@ onnx_model_path = 'rock_paper_scissors_model.onnx'
 onnx_session = ort.InferenceSession(onnx_model_path)  # Renamed this variable
 
 choices = ['paper', 'scissors', 'rock']
+shifted_choices = ['scissors', 'rock', 'paper']
 sequence_length = 20  # Keep the last 20 pairs of choices
 past_data = [[random.randint(0, 2) for _ in range(2)] for _ in range(sequence_length)]
 
@@ -86,7 +87,7 @@ def play():
             logging.info("Predicting computer choice...")
             outputs = onnx_session.run(None, {'input': input_data})
             predicted_move_index = np.argmax(outputs[0])
-            computer_choice = choices[predicted_move_index]
+            computer_choice = shifted_choices[predicted_move_index]
             logging.info(f"Predicted computer choice: {computer_choice}")
         except Exception as e:
             logging.error(f"Error during prediction: {e}")
