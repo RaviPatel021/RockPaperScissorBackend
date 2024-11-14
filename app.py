@@ -169,7 +169,7 @@ def update_leaderboard():
         # If the new values don't meet the criteria, don't update
         return jsonify({'message': 'Leaderboard entry not updated (does not meet criteria)'})
 
-    elif total_games > 50:
+    elif total_games >= 50:
         # If no existing entry, insert a new document
         scoreboard_collection.insert_one({
             'userId': user_id,
