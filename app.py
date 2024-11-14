@@ -26,6 +26,7 @@ except Exception as e:
 
 db = client['rockpaperscissor']  # Replace with your database name
 results_collection = db['results']  # Collection to store game results
+scoreboard_collection = db['score']
 
 app = Flask(__name__)
 CORS(app, supports_credentials=True)
@@ -120,6 +121,67 @@ def play():
 def home():
     return "Welcome to the Rock Paper Scissors API! Please use the /play endpoint to play."
 
+
+@app.route('/leaderboard', methods=['GET'])
+def get_leaderboard():
+    # Fetch the top 10 leaderboard entries, sorted by win rate, ties, and total games
+    leaderboard = list(scoreboard_collection.find().sort([("wins", -1), ("ties", -1), ("total", -1)]).limit(10))
+    
+    # Remove the _id field from each leaderboard entry
+    for entry in leaderboard:
+        entry.pop('_id', None)  # Removes _id if it exists
+    
+    # Return the leaderboard as a JSON response
+    return jsonify(leaderboard)
+
+
+@app.route('/update-leaderboard', methods=['POST'])
+def update_leaderboard():
+    data = request.get_json()
+    user_id = data.get('userId')
+    user_name = data.get('userName')
+    new_wins = data.get('win')
+    new_ties = data.get('tie')
+    new_losses = data.get('loss')
+    total_games = data.get('total')
+
+    print("Received data:", data)
+
+    if not user_id or new_wins is None or new_ties is None or new_losses is None:
+        return jsonify({'error': 'Missing userId, win, or tie count'}), 400
+
+    # Fetch the existing leaderboard entry for the user
+    existing_entry = scoreboard_collection.find_one({'userId': user_id})
+
+    # Only update if the new win rate is higher, or if the win rate is the same and the tie rate is higher
+    if existing_entry:
+        current_wins = existing_entry.get('wins', 0)
+        current_ties = existing_entry.get('ties', 0)
+
+        if new_wins > current_wins or (new_wins == current_wins and new_ties > current_ties):
+            # Update with new values if the criteria are met
+            scoreboard_collection.update_one(
+                {'userId': user_id},
+                {'$set': {'wins': new_wins, 'ties': new_ties, 'losses' : new_losses, 'total' : total_games}}
+            )
+            return jsonify({'message': 'Leaderboard entry updated successfully'})
+
+        # If the new values don't meet the criteria, don't update
+        return jsonify({'message': 'Leaderboard entry not updated (does not meet criteria)'})
+
+    elif total_games > 50:
+        # If no existing entry, insert a new document
+        scoreboard_collection.insert_one({
+            'userId': user_id,
+            'UserName': user_name,
+            'wins': new_wins,
+            'ties': new_ties,
+            'losses': new_losses,
+            'total' : total_games
+        })
+        return jsonify({'message': 'New leaderboard entry created successfully'})
+    
+    return jsonify({'message': 'Leaderboard entry not updated (does not meet criteria)'})
 
 def store_result(username, user_choice, computer_choice, result, isRandom):
     """Store game result in MongoDB."""
