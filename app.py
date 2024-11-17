@@ -45,7 +45,7 @@ onnx_session = ort.InferenceSession(onnx_model_path)  # Renamed this variable
 choices = ['paper', 'scissors', 'rock']
 shifted_choices = ['scissors', 'rock', 'paper']
 sequence_length = 20  # Keep the last 20 pairs of choices
-past_data = [[random.randint(0, 2) for _ in range(2)] for _ in range(sequence_length)]
+past_data = [[0,0]]
 
 @app.route('/play', methods=['POST'])
 def play():
@@ -78,7 +78,7 @@ def play():
 
     else:
         # Prepare input data for the model
-        input_data = np.array(past_data, dtype=np.float32).reshape(1, sequence_length, 2)
+        input_data = np.array(past_data, dtype=np.float32).reshape(1, len(past_data), 2)
 
         # Log input data shape
         logging.info(f"Input data shape: {input_data.shape}")
@@ -96,7 +96,8 @@ def play():
 
         # Update past data
         past_data.append([rps_mapping[user_choice], rps_mapping[computer_choice]])
-        past_data = past_data[1:]
+        if len(past_data) > 20:
+            past_data = past_data[1:]
 
         # Determine the winner
         result = determine_winner(user_choice, computer_choice)
